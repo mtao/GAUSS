@@ -42,7 +42,11 @@ namespace Gauss {
             ~ElementBase() { }
             
             static constexpr unsigned int numDOFs() { return N; }
-                             
+            
+            inline decltype(auto) getQDOFList() {
+                return QuadratureU::m_qDofs;
+            }
+            
             inline double getKineticEnergy(const State<DataType> &state) {
                 return QuadratureT::getValue(state);
             }
@@ -86,7 +90,6 @@ namespace Gauss {
                  //Integrate Body Force (send it density function)
                 QuadratureBF::setBodyForceDensity(QuadratureT::getDensity());
                 QuadratureBF::getGradient(f, state);
-                
             }
                              
         protected:

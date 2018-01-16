@@ -73,12 +73,17 @@ namespace Gauss {
     
     //Utility functions to fix a bunch of points
     template<typename World, typename FEMSystem>
+<<<<<<< 6359e33405c82172db8878e43c1ea6d8f1e8f532
     void fixDisplacementMin(World &world, FEMSystem *system, unsigned int dim = 0, double tolerance=1e-5) {
+=======
+    void fixDisplacementMin(World &world, FEMSystem *system, unsigned int dim = 0, double tol = 1e-5) {
+>>>>>>> Fixing min constraint and adding a dof getter to element
         //find all vertices with minimum x coordinate and fix DOF associated with them
-        auto minX = system->getImpl().getV()(0,dim);
+        auto minX = system->getImpl().getV().col(dim).minCoeff();
         std::vector<unsigned int> minV;
         
         for(unsigned int ii=0; ii<system->getImpl().getV().rows(); ++ii) {
+<<<<<<< 6359e33405c82172db8878e43c1ea6d8f1e8f532
             
             if(system->getImpl().getV()(ii,dim) < minX) {
                 minX = system->getImpl().getV()(ii,dim);
@@ -110,8 +115,7 @@ namespace Gauss {
                 minX = system->getImpl().getV()(ii,dim);
             }
         }
-	for(unsigned int ii=0; ii<system->getImpl().getV().rows(); ++ii) {
-            
+	    for(unsigned int ii=0; ii<system->getImpl().getV().rows(); ++ii) {
             if(fabs(system->getImpl().getV()(ii,dim) - minX) < tolerance) {
                 minV.push_back(ii);
             }
