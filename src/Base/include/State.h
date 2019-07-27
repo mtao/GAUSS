@@ -138,6 +138,7 @@ namespace Gauss {
     bool State<DataType>::setState(unsigned int index, const DataType * const val, unsigned int numData) {
         //copy data directly into the backing store
         m_backingStore.set(index, numData, val);
+        return true;
     }
 
     template<typename DataType>
@@ -149,6 +150,7 @@ namespace Gauss {
         for(unsigned int ii=index; ii < index+numData; ++ii) {
             m_backingStore[ii] += val[ii-index];
         }
+        return true;
     }
 
     //get ptr into state
@@ -203,6 +205,7 @@ namespace Gauss {
         for(unsigned int ii=i*m_offset; ii < m_offset+stateSize(i); ++ii) {
             m_backingStore[ii] += val[ii-i*m_offset];
         }
+        return true;
 
     }
     

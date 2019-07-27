@@ -6,13 +6,13 @@ macro(initUI)
    set(CMAKE_AUTOMOC ON)
 
    # Find the QtWidgets library
-   find_package(Qt5Core)
-   find_package(Qt5Widgets)
-   find_package(Qt53DCore)
-   find_package(Qt53DExtras)
-   find_package(Qt53DInput)
-   find_package(Qt53DLogic)
-   find_package(Qt53DRender)
+   find_package(Qt5Core REQUIRED)
+   find_package(Qt5Widgets REQUIRED)
+   find_package(Qt53DCore REQUIRED)
+   find_package(Qt53DExtras REQUIRED)
+   find_package(Qt53DInput REQUIRED)
+   find_package(Qt53DLogic REQUIRED)
+   find_package(Qt53DRender REQUIRED)
    
     include_directories(${Qt5Core_INCLUDE_DIRS} 
 			${Qt5Widgets_INCLUDE_DIRS} 

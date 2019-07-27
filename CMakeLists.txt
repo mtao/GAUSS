@@ -13,7 +13,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 #this code uses OpenMP which is supported almost everywhere except for OS X clang
 #to get around this you can choose to install clang via homebrew to get access to OpenMP
 option(GAUSS_USE_UI     "Use Gauss' UI Library" ON)
-option(GAUSS_BUILD_EXAMPLE "Build Example" ON)
+option(GAUSS_BUILD_EXAMPLES "Build Example" ON)
 
 #expose USE_OPENMP variable for OS X only
 if(APPLE)
@@ -109,6 +109,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 #libigl include directory
 set(LIBIGL_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/ThirdParty/libigl/include CACHE FILEPATH "Root include directory for libigl" FORCE)
 set(LIBIGL_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/ThirdParty/libigl/include CACHE FILEPATH "Root include directory for libigl")
+include_directories(${LIBIGL_INCLUDE_DIR})
 
 #Spectra
 set(SPECTRA_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/ThirdParty/Spectra/include CACHE FILEPATH "Root include directory for SPECTRA")
@@ -125,6 +126,8 @@ set(${GAUSS_INCLUDE_DIR} ${GAUSS_INCLUDE_DIR} ${LIBCCD_DIR}/src)
 set(${GAUSS_INCLUDE_DIR} ${GAUSS_INCLUDE_DIR} ${OCTOMAP_DIR}/octomap/include)
 
 
+FIND_PACKAGE(Eigen3)
+IF(NOT ${EIGEN3_FOUND})
 download_project(
         PROJ         eigen
         SOURCE_DIR   ${PROJECT_SOURCE_DIR}/build/ThirdParty/eigen
@@ -134,10 +137,9 @@ download_project(
         URL_MD5 8ad10ac703a78143a4062c9bda9d8fd3
     )
  
-#set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PROJECT_SOURCE_DIR}/build/ThirdParty/eigen/cmake CACHE PATH "Root include directory for Eigen3" FORCE) 
-#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/build/ThirdParty/eigen/cmake CACHE PATH "Root include directory for Eigen3" FORCE) 
 set(EIGEN3_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/build/ThirdParty/eigen CACHE INTERNAL "" FORCE)
 include_directories(${EIGEN3_INCLUDE_DIR})
+ENDIF(NOT ${EIGEN3_FOUND})
 
 #GTest (From Masha Shugrina)
 # Google Test (Not using this right now and its causing build problems so comment out)
@@ -248,6 +250,7 @@ set(Gauss_EXT_LIBDIR ${GAUSS_LINK_DIR} CACHE STRING "" FORCE)
 if(USE_MATLAB)
     add_subdirectory(${PROJECT_SOURCE_DIR}/src/MATLAB)
 endif(USE_MATLAB)
+
 
 #Init GUI Stuff
 if(GAUSS_USE_UI)
