@@ -13,7 +13,9 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 file(GLOB HEADER_CODE ${FEM_SOURCE_DIR}/include/*.h)
 file(GLOB SRC_CODE ${FEM_SOURCE_DIR}/cpp/*.cpp)
 
-set(GAUSS_INCLUDE_DIR ${GAUSS_INCLUDE_DIR}  ${FEM_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
+#set(GAUSS_INCLUDE_DIR ${GAUSS_INCLUDE_DIR}  ${FEM_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
+target_include_directories(gauss_internal_libraries INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-include_directories(${GAUSS_INCLUDE_DIR})
+#include_directories(${GAUSS_INCLUDE_DIR})
 add_library(FEM ${HEADER_CODE} ${SRC_CODE})
+target_link_libraries(FEM PUBLIC gauss_internal_libraries)

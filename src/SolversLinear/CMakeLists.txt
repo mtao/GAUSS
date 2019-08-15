@@ -18,7 +18,9 @@ endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 file(GLOB HEADER_CODE ${SolversLinear_SOURCE_DIR}/include/*.h)
 file(GLOB SRC_CODE ${SolversLinear_SOURCE_DIR}/cpp/*.cpp)
 
-set(GAUSS_INCLUDE_DIR ${GAUSS_INCLUDE_DIR}  ${SolversLinear_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
+#set(GAUSS_INCLUDE_DIR ${GAUSS_INCLUDE_DIR}  ${SolversLinear_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
+target_include_directories(gauss_internal_libraries INTERFACE ${SolversLinear_SOURCE_DIR}/include)
 
-include_directories(${GAUSS_INCLUDE_DIR})
+#include_directories(${GAUSS_INCLUDE_DIR})
 add_library(SolversLinear ${HEADER_CODE} ${SRC_CODE})
+target_link_libraries(SolversLinear PUBLIC gauss_internal_libraries)

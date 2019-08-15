@@ -15,5 +15,6 @@ file(GLOB SRC_CODE ${Collisions_SOURCE_DIR}/cpp/*.cpp)
 
 set(GAUSS_INCLUDE_DIR ${GAUSS_INCLUDE_DIR}  ${Collisions_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
 
-include_directories(${GAUSS_INCLUDE_DIR})
+#include_directories(${GAUSS_INCLUDE_DIR})
 add_library(Collisions ${HEADER_CODE} ${SRC_CODE})
+target_link_libraries(Collisions PUBLIC gauss_internal_libraries)

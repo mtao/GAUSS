@@ -11,5 +11,5 @@ file(GLOB SRC_CODE ${Optimization_SOURCE_DIR}/cpp/*.cpp)
 
 set(GAUSS_INCLUDE_DIR ${GAUSS_INCLUDE_DIR}  ${Optimization_SOURCE_DIR}/include CACHE INTERNAL "" FORCE)
 
-include_directories(${GAUSS_INCLUDE_DIR})
 add_library(Optimization ${HEADER_CODE} ${SRC_CODE})
+target_link_libraries(Optimization PUBLIC gauss_internal_libraries)

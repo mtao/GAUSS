@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.2)
+cmake_minimum_required (VERSION 3.10)
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 project (Gauss C CXX)
@@ -27,6 +27,7 @@ set(USE_PARDISO CACHE BOOL "Use Pardiso if available on system")
 set(USE_MATLAB CACHE BOOL "Build GAUSS MATLAB Interface via homebrew llvm on OSX")
 set(USE_GUROBI CACHE BOOL "USE GUROBI QP Solver")
 
+add_library(gauss_internal_libraries INTERFACE)
 
 if(APPLE)
     if(USE_OPENMP)
@@ -52,30 +53,36 @@ set(GAUSS_INCLUDE_DIR  CACHE INTERNAL "")
 set(GAUSS_LINK_DIR  CACHE INTERNAL "")
 set(GAUSS_LIBS  CACHE INTERNAL "")
 set(GAUSS_BINARY_DIR ${PROJECT_BINARY_DIR} CACHE INTERNAL "")
+if(USE_OPENMP)
+    find_package(OpenMP REQUIRED)
+    target_compile_definitions(gauss_internal_libraries INTERFACE -DGAUSS_OPENMP)
+    target_link_libraries(gauss_internal_libraries INTERFACE OpenMP::OpenMP_CXX)
+ENDIF(USE_OPENMP)
 
 if(APPLE)
     if(USE_OPENMP)
-        set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -fopenmp)
-        set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fopenmp)
+        #set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -fopenmp)
+        #set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -fopenmp)
         set(CMAKE_XCODE_ATTRIBUTE_CC /usr/local/opt/llvm/bin/clang)
-        set(GAUSS_INCLUDE_DIR ${LLVM_INCLUDE} CACHE INTERNAL "")
-        set(GAUSS_LINK_DIR  ${LLVM_LIB} CACHE INTERNAL "")
-        set(GAUSS_LIBS ${LLVM_LIB}/libiomp5.dylib CACHE INTERNAL "")
-        add_definitions(-DGAUSS_OPENMP)
+        #set(GAUSS_INCLUDE_DIR ${LLVM_INCLUDE} CACHE INTERNAL "")
+        #set(GAUSS_LINK_DIR  ${LLVM_LIB} CACHE INTERNAL "")
+        #set(GAUSS_LIBS ${LLVM_LIB}/libiomp5.dylib CACHE INTERNAL "")
+        #add_definitions(-DGAUSS_OPENMP)
     endif(USE_OPENMP)
 else()
     find_package(OpenMP REQUIRED)
 
     if(WIN32) 
-        set (CMAKE_C_FLAGS /openmp ${CMAKE_C_FLAGS})
-        set (CMAKE_CXX_FLAGS /openmp ${CMAKE_CXX_FLAGS})
-		add_definitions(-DWIN32)
+        #set (CMAKE_C_FLAGS /openmp ${CMAKE_C_FLAGS})
+        #set (CMAKE_CXX_FLAGS /openmp ${CMAKE_CXX_FLAGS})
+        #add_definitions(-DWIN32)
+        target_compile_definitions(gauss_internal_libraries INTERFACE -DWIN32)
     ELSE()
-        set (CMAKE_C_FLAGS ${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS})
-        set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
-        set (CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS})
+        #set (CMAKE_C_FLAGS ${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS})
+        #set (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
+        #set (CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS})
     ENDIF()
-    add_definitions(-DGAUSS_OPENMP)
+    #add_definitions(-DGAUSS_OPENMP)
 endif(APPLE)
 
 if(USE_PARDISO)
@@ -92,7 +99,8 @@ if(USE_PARDISO)
     endif(APPLE)
 
     set(GAUSS_LINK_DIR ${GAUSS_LINK_DIR} ${PARDISO_DIR} CACHE INTERNAL "")
-    add_definitions(-DGAUSS_PARDISO)
+    #add_definitions(-DGAUSS_PARDISO)
+    target_compile_definitions(gauss_internal_libraries INTERFACE -DGAUSS_PARDISO)
 endif(USE_PARDISO)
 
 #Output directories
@@ -102,14 +110,27 @@ set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib )
 
 #add define for data directory
 add_definitions(-DGAUSS_DATA_DIR=${PROJECT_SOURCE_DIR}/data)
+target_compile_definitions(gauss_internal_libraries INTERFACE -DGAUSS_DATA_DIR=${PROJECT_SOURCE_DIR}/data)
+
 
 #grab important packages
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 #libigl include directory
-set(LIBIGL_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/ThirdParty/libigl/include CACHE FILEPATH "Root include directory for libigl" FORCE)
-set(LIBIGL_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/ThirdParty/libigl/include CACHE FILEPATH "Root include directory for libigl")
-include_directories(${LIBIGL_INCLUDE_DIR})
+#LIBIGL Stuff
+option(LIBIGL_WITH_OPENGL            "Use OpenGL"         ON)
+option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           ON)
+option(LIBIGL_WITH_VIEWER            "Use OpenGL viewer"  ON)
+option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui"          ON)
+find_package(LIBIGL REQUIRED)
+IF(LIBIGL_FOUND)
+    set(LIBIGL_INCLUDE_PATH ${LIBIGL_INCLUDE_DIR} CACHE FILEPATH "Root include directory for libigl")
+ELSE(LIBIGL_FOUND)
+    set(LIBIGL_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/ThirdParty/libigl/include CACHE FILEPATH "Root include directory for libigl" FORCE)
+    set(LIBIGL_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/ThirdParty/libigl/include CACHE FILEPATH "Root include directory for libigl")
+    #include_directories(${LIBIGL_INCLUDE_DIR})
+ENDIF(LIBIGL_FOUND)
+target_link_libraries(gauss_internal_libraries INTERFACE igl::core)
 
 #Spectra
 set(SPECTRA_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/ThirdParty/Spectra/include CACHE FILEPATH "Root include directory for SPECTRA")
@@ -138,8 +159,9 @@ download_project(
     )
  
 set(EIGEN3_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/build/ThirdParty/eigen CACHE INTERNAL "" FORCE)
-include_directories(${EIGEN3_INCLUDE_DIR})
 ENDIF(NOT ${EIGEN3_FOUND})
+#include_directories(${EIGEN3_INCLUDE_DIR})
+target_include_directories(gauss_internal_libraries INTERFACE ${EIGEN3_INCLUDE_DIR})
 
 #GTest (From Masha Shugrina)
 # Google Test (Not using this right now and its causing build problems so comment out)
@@ -168,16 +190,21 @@ ENDIF(NOT ${EIGEN3_FOUND})
 #Google test ends here
 
 #Individual feature directories
-include_directories(${LIBIGL_INCLUDE_PATH})
+#include_directories(${LIBIGL_INCLUDE_PATH})
 #include_directories(/usr/local/opt/llvm/lib/clang/4.0.0/include)
 
-include_directories(${source_dir}/include) #gtest
-include_directories(${PROJECT_SOURCE_DIR}/src/Core/include 
+#include_directories(${source_dir}/include) #gtest
+#include_directories(${PROJECT_SOURCE_DIR}/src/Core/include 
+#		    ${PROJECT_SOURCE_DIR}/src/Base/include)
+target_include_directories(gauss_internal_libraries INTERFACE ${source_dir}/include) #gtest
+target_include_directories(gauss_internal_libraries INTERFACE ${PROJECT_SOURCE_DIR}/src/Core/include 
 		    ${PROJECT_SOURCE_DIR}/src/Base/include)
 
 #link_directories(/usr/local/opt/llvm/lib)
-include_directories(${GAUSS_INCLUDE_DIR})
-link_directories(${GAUSS_LINK_DIR})
+#include_directories(${GAUSS_INCLUDE_DIR})
+#link_directories(${GAUSS_LINK_DIR})
+target_include_directories(gauss_internal_libraries INTERFACE ${GAUSS_INCLUDE_DIR}) 
+#target_link_directories(gauss_internal_libraries INTERFACE ${GAUSS_LINK_DIR})
 
 
 #Set parameters for third party libraries
@@ -207,6 +234,7 @@ set(ccd_FOUND ON)
 #Third Party libraries
 #fix for odd build behavior of libccd on windows when using static linking.
 add_definitions("-DCCD_STATIC_DEFINE")
+target_compile_definitions(gauss_internal_libraries INTERFACE -DCCD_STATIC_DEFINE)
 add_subdirectory(${LIBCCD_DIR})
 #add_subdirectory(${OCTOMAP_DIR})
 add_subdirectory(${FCL_DIR})
@@ -214,9 +242,12 @@ add_subdirectory(${FCL_DIR})
 #Gurobi stuff here
 if(USE_GUROBI)
     add_subdirectory(${PROJECT_SOURCE_DIR}/ThirdParty/eigen-gurobi)
-    set(GAUSS_INCLUDE_DIR ${GAUSS_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/ThirdParty/eigen-gurobi/src ${GUROBI_INCLUDE_DIR} CACHE INTERNAL "")
-    set(GAUSS_LIBS ${GAUSS_LIBS} ${GUROBI_DIR}/lib/${GUROBI_LIBRARY}  ${GUROBI_DIR}/lib/${GUROBI_CXX_LIBRARY} eigen-gurobi CACHE INTERNAL "")
+    #set(GAUSS_INCLUDE_DIR ${GAUSS_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/ThirdParty/eigen-gurobi/src ${GUROBI_INCLUDE_DIR} CACHE INTERNAL "")
+    target_include_directories(gauss_internal_libraries INTERFACE ${GUROBI_INCLUDE_DIR})
+    #set(GAUSS_LIBS ${GAUSS_LIBS} ${GUROBI_DIR}/lib/${GUROBI_LIBRARY}  ${GUROBI_DIR}/lib/${GUROBI_CXX_LIBRARY} eigen-gurobi CACHE INTERNAL "")
+    target_link_libraries(gauss_internal_libraries INTERFACE ${GUROBI_DIR}/lib/${GUROBI_LIBRARY}  ${GUROBI_DIR}/lib/${GUROBI_CXX_LIBRARY} eigen-gurobi)
     add_definitions(-DGAUSS_GUROBI)
+    target_compile_definitions(gauss_internal_libraries INTERFACE -DGAUSS_GUROBI)
 endif(USE_GUROBI)
 
 #Main Gauss libraries
@@ -260,12 +291,6 @@ endif(GAUSS_USE_UI)
 
 #Example codes 
 if(GAUSS_USE_UI)
-    #LIBIGL Stuff
-    option(LIBIGL_WITH_OPENGL            "Use OpenGL"         ON)
-    option(LIBIGL_WITH_OPENGL_GLFW       "Use GLFW"           ON)
-    option(LIBIGL_WITH_VIEWER            "Use OpenGL viewer"  ON)
-    option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui"          ON)
-    find_package(LIBIGL REQUIRED)
     if(GAUSS_BUILD_EXAMPLES)
        add_subdirectory(${PROJECT_SOURCE_DIR}/src/Examples)
     endif(GAUSS_BUILD_EXAMPLES)

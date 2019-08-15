@@ -18,5 +18,5 @@ endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 file(GLOB HEADER_CODE ${Base_SOURCE_DIR}/include/*.h)
 file(GLOB SRC_CODE ${Base_SOURCE_DIR}/cpp/*.cpp)
 
-include_directories(${GAUSS_INCLUDE_DIR})
 add_library(Base ${HEADER_CODE} ${SRC_CODE})
+target_link_libraries(Base PUBLIC gauss_internal_libraries)
